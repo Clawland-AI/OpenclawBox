@@ -1,0 +1,19 @@
+{
+  "name": "@clawland/fleet-agent",
+  "version": "0.1.0",
+  "description": "Clawland Fleet Agent — device-side heartbeat, config polling, and OTA for ClawBox.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "author": "Clawland Inc",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "uuid": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+DEPLOY_DIR="$ROOT_DIR/deploy"
+PID_DIR="$ROOT_DIR/.pids"
+
+RED='\033[0;31m'
+TEAL='\033[0;36m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+usage() {
+  echo -e "${RED}Claw${TEAL}Box${NC} Control Tool"
+  echo ""
+  echo "Usage: clawboxctl <command>"
+  echo ""
+  echo "Commands:"
+  echo "  install   Install dependencies for all packages"
+  echo "  start     Start all ClawBox services"
+  echo "  stop      Stop all ClawBox services"
+  echo "  status    Show status of all services"
+  echo "  bind      Generate or set device ID"
+  echo "  logs      Collect diagnostic logs"
+  echo ""
+}
+
+cmd_install() {
+  echo "Installing dependencies..."
+  cd "$ROOT_DIR/packages/cheaprouter" && npm install
+  cd "$ROOT_DIR/packages/fleet-server" && npm install
+  cd "$ROOT_DIR/packages/fleet-agent" && npm install
+  if [ -f "$ROOT_DIR/packages/fleet-console/package.json" ]; then
+    cd "$ROOT_DIR/packages/fleet-console" && npm install
+  fi
+  echo "✓ All dependencies installed"
+}
+
+cmd_start() {
+  mkdir -p "$PID_DIR"
+
+  if [ -f "$DEPLOY_DIR/docker-compose.yml" ] && command -v docker &>/dev/null; then
+    echo "Starting with Docker Compose..."
+    cd "$DEPLOY_DIR"
+    if [ ! -f .env ]; then cp env.example .env; fi
+    docker compose up -d
+    echo "✓ Services started via Docker Compose"
+    return
+  fi
+
+  echo "Starting services (Node.js)..."
+
+  DEMO_MODE=true nohup node "$ROOT_DIR/packages/cheaprouter/src/index.js" > "$PID_DIR/cheaprouter.log" 2>&1 &
+  echo $! > "$PID_DIR/cheaprouter.pid"
+  echo "  ✓ CheapRouter (PID: $!)"
+
+  nohup node "$ROOT_DIR/packages/fleet-server/src/index.js" > "$PID_DIR/fleet-server.log" 2>&1 &
+  echo $! > "$PID_DIR/fleet-server.pid"
+  echo "  ✓ Fleet Server (PID: $!)"
+
+  sleep 2
+
+  nohup node "$ROOT_DIR/packages/fleet-agent/src/index.js" > "$PID_DIR/fleet-agent.log" 2>&1 &
+  echo $! > "$PID_DIR/fleet-agent.pid"
+  echo "  ✓ Fleet Agent (PID: $!)"
+
+  echo ""
+  echo "Services running:"
+  echo "  CheapRouter:  http://localhost:4000"
+  echo "  Fleet Server: http://localhost:4100"
+}
+
+cmd_stop() {
+  echo "Stopping services..."
+
+  if [ -f "$DEPLOY_DIR/docker-compose.yml" ] && command -v docker &>/dev/null; then
+    cd "$DEPLOY_DIR" && docker compose down 2>/dev/null || true
+  fi
+
+  for svc in cheaprouter fleet-server fleet-agent; do
+    if [ -f "$PID_DIR/$svc.pid" ]; then
+      PID=$(cat "$PID_DIR/$svc.pid")
+      if kill -0 "$PID" 2>/dev/null; then
+        kill "$PID"
+        echo "  ✓ Stopped $svc (PID: $PID)"
+      fi
+      rm "$PID_DIR/$svc.pid"
+    fi
+  done
+  echo "All services stopped."
+}
+
+cmd_status() {
+  echo -e "${RED}Claw${TEAL}Box${NC} Status"
+  echo "========================="
+
+  for svc in cheaprouter fleet-server fleet-agent; do
+    if [ -f "$PID_DIR/$svc.pid" ]; then
+      PID=$(cat "$PID_DIR/$svc.pid")
+      if kill -0 "$PID" 2>/dev/null; then
+        echo "  ✓ $svc: running (PID: $PID)"
+      else
+        echo "  ✗ $svc: stopped (stale PID)"
+      fi
+    else
+      echo "  - $svc: not started"
+    fi
+  done
+
+  echo ""
+  echo "Health checks:"
+  for url in "http://localhost:4000/health" "http://localhost:4100/health"; do
+    STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
+    if [ "$STATUS" = "200" ]; then
+      echo "  ✓ $url → $STATUS"
+    else
+      echo "  ✗ $url → $STATUS"
+    fi
+  done
+}
+
+cmd_bind() {
+  DEVICE_ID="${1:-}"
+  DEVICE_NAME="${2:-}"
+
+  if [ -n "$DEVICE_ID" ]; then
+    cd "$ROOT_DIR/packages/fleet-agent"
+    mkdir -p data
+    cat > data/device-id.json << EOF
+{
+  "deviceId": "$DEVICE_ID",
+  "name": "${DEVICE_NAME:-ClawBox-Custom}",
+  "createdAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+EOF
+    echo "✓ Device bound: $DEVICE_ID"
+  else
+    echo "Usage: clawboxctl bind <device-id> [device-name]"
+    echo ""
+    echo "Generates a new device identity. Examples:"
+    echo "  clawboxctl bind my-clawbox-001 \"Living Room ClawBox\""
+  fi
+}
+
+cmd_logs() {
+  DIAG_DIR="$ROOT_DIR/.diagnostics/$(date +%Y%m%d-%H%M%S)"
+  mkdir -p "$DIAG_DIR"
+
+  echo "Collecting diagnostic logs to $DIAG_DIR..."
+
+  for svc in cheaprouter fleet-server fleet-agent; do
+    if [ -f "$PID_DIR/$svc.log" ]; then
+      cp "$PID_DIR/$svc.log" "$DIAG_DIR/"
+    fi
+  done
+
+  for url in "http://localhost:4000/health" "http://localhost:4100/health"; do
+    NAME=$(echo "$url" | sed 's|.*/||')
+    curl -s "$url" > "$DIAG_DIR/health-$NAME.json" 2>/dev/null || echo "unreachable" > "$DIAG_DIR/health-$NAME.txt"
+  done
+
+  curl -s "http://localhost:4000/v1/metrics" > "$DIAG_DIR/cheaprouter-metrics.json" 2>/dev/null || true
+  curl -s "http://localhost:4100/api/devices" > "$DIAG_DIR/devices.json" 2>/dev/null || true
+
+  echo "✓ Diagnostics saved to $DIAG_DIR"
+  ls -la "$DIAG_DIR"
+}
+
+case "${1:-}" in
+  install) cmd_install ;;
+  start)   cmd_start ;;
+  stop)    cmd_stop ;;
+  status)  cmd_status ;;
+  bind)    cmd_bind "${2:-}" "${3:-}" ;;
+  logs)    cmd_logs ;;
+  *)       usage ;;
+esac

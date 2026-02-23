@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  cheaprouter:
+    build:
+      context: ../packages/cheaprouter
+    ports:
+      - "${CHEAPROUTER_PORT:-4000}:4000"
+    environment:
+      - PORT=4000
+      - DEMO_MODE=${DEMO_MODE:-true}
+      - FLEET_SERVER_URL=http://fleet-server:4100
+    depends_on:
+      - fleet-server
+    volumes:
+      - cheaprouter-data:/app/data
+    restart: unless-stopped
+
+  fleet-server:
+    build:
+      context: ../packages/fleet-server
+    ports:
+      - "${FLEET_PORT:-4100}:4100"
+    environment:
+      - FLEET_PORT=4100
+    volumes:
+      - fleet-data:/app/data
+    restart: unless-stopped
+
+  fleet-agent:
+    build:
+      context: ../packages/fleet-agent
+    environment:
+      - FLEET_SERVER_URL=http://fleet-server:4100
+      - HEARTBEAT_INTERVAL=${HEARTBEAT_INTERVAL:-30000}
+    depends_on:
+      - fleet-server
+    volumes:
+      - agent-data:/app/data
+    restart: unless-stopped
+
+  fleet-console:
+    build:
+      context: ../packages/fleet-console
+    ports:
+      - "${CONSOLE_PORT:-4200}:80"
+    depends_on:
+      - fleet-server
+    restart: unless-stopped
+
+volumes:
+  cheaprouter-data:
+  fleet-data:
+  agent-data:

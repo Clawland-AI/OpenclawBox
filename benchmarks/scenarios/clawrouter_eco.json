@@ -1,0 +1,11 @@
+{
+  "name": "ClawRouter Eco Profile",
+  "description": "Routes all requests to the cheapest capable model per tier.",
+  "tiers": {
+    "simple": { "model": "gpt-oss-120b", "input_price": 0.00, "output_price": 0.00 },
+    "medium": { "model": "gemini-2.5-flash-lite", "input_price": 0.10, "output_price": 0.40 },
+    "complex": { "model": "gemini-2.5-flash-lite", "input_price": 0.10, "output_price": 0.40 },
+    "reasoning": { "model": "grok-4-fast", "input_price": 0.20, "output_price": 0.50 }
+  },
+  "note": "Maximum savings, may sacrifice quality on complex tasks."
+}

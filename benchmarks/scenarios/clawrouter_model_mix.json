@@ -1,0 +1,17 @@
+{
+  "name": "ClawRouter Smart Mix",
+  "description": "Realistic workload distribution: 50% simple, 30% medium, 15% complex, 5% reasoning. Demonstrates maximum savings with tier-based routing.",
+  "workload_weights": {
+    "simple": 0.50,
+    "medium": 0.30,
+    "complex": 0.15,
+    "reasoning": 0.05
+  },
+  "tiers": {
+    "simple": { "model": "gpt-oss-120b", "input_price": 0.00, "output_price": 0.00 },
+    "medium": { "model": "gemini-2.5-flash-lite", "input_price": 0.10, "output_price": 0.40 },
+    "complex": { "model": "gemini-2.5-pro", "input_price": 1.25, "output_price": 10.00 },
+    "reasoning": { "model": "grok-4-fast", "input_price": 0.20, "output_price": 0.50 }
+  },
+  "note": "In workloads dominated by simple queries (common in production), free/cheap models handle most traffic."
+}

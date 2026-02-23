@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  cheaprouter:
+    name: CheapRouter
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        working-directory: packages/cheaprouter
+        run: npm install
+      - name: Start server and test
+        working-directory: packages/cheaprouter
+        run: |
+          DEMO_MODE=true node src/index.js &
+          sleep 3
+          curl -f http://localhost:4000/health
+          curl -f -X POST http://localhost:4000/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -d '{"model":"blockrun/auto","messages":[{"role":"user","content":"test"}]}'
+          kill %1
+
+  fleet-server:
+    name: Fleet Server
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        working-directory: packages/fleet-server
+        run: npm install
+      - name: Start server and test
+        working-directory: packages/fleet-server
+        run: |
+          node src/index.js &
+          sleep 3
+          curl -f http://localhost:4100/health
+          curl -f -X POST http://localhost:4100/api/heartbeat \
+            -H "Content-Type: application/json" \
+            -d '{"deviceId":"ci-test","version":"0.1.0"}'
+          curl -f http://localhost:4100/api/devices
+          kill %1
+
+  fleet-agent:
+    name: Fleet Agent
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        working-directory: packages/fleet-agent
+        run: npm install
+      - name: Install fleet-server deps
+        working-directory: packages/fleet-server
+        run: npm install
+      - name: Test agent with server
+        run: |
+          node packages/fleet-server/src/index.js &
+          sleep 2
+          timeout 10 node packages/fleet-agent/src/index.js || true
+          curl -f http://localhost:4100/api/devices | grep -q "clawbox-"
+
+  benchmarks:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run benchmarks
+        run: python benchmarks/run_bench.py --requests 50 --output benchmarks/reports/
+      - name: Verify reports
+        run: |
+          test -f benchmarks/reports/benchmark-report.md
+          test -f benchmarks/reports/baseline.json

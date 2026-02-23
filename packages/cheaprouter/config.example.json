@@ -1,0 +1,32 @@
+{
+  "port": 4000,
+  "demoMode": true,
+  "fleetServerUrl": "http://localhost:4100",
+  "routing": {
+    "defaultProfile": "auto",
+    "profiles": {
+      "eco": { "strategy": "cheapest", "description": "Route to cheapest capable model" },
+      "auto": { "strategy": "balanced", "description": "Balance cost and quality" },
+      "premium": { "strategy": "best-quality", "description": "Always use best model" },
+      "free": { "strategy": "free-only", "description": "Only use free-tier models" }
+    }
+  },
+  "rateLimit": {
+    "enabled": true,
+    "perDevice": {
+      "rpm": 60,
+      "tokensPerMinute": 100000
+    }
+  },
+  "audit": {
+    "enabled": true,
+    "storePrompts": false,
+    "dbPath": "./data/audit.sqlite"
+  },
+  "providers": {
+    "mock": {
+      "enabled": true,
+      "latencyMs": 200
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "ClawRouter Auto Profile",
+  "description": "Balanced routing: uses mid-tier models for most tasks, premium for complex/reasoning.",
+  "tiers": {
+    "simple": { "model": "kimi-k2.5", "input_price": 0.60, "output_price": 3.00 },
+    "medium": { "model": "grok-code-fast", "input_price": 0.20, "output_price": 1.50 },
+    "complex": { "model": "gemini-3.1-pro", "input_price": 2.00, "output_price": 12.00 },
+    "reasoning": { "model": "grok-4-fast", "input_price": 0.20, "output_price": 0.50 }
+  },
+  "note": "Best balance of cost and quality for general workloads."
+}

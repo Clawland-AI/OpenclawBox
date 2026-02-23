@@ -1,0 +1,32 @@
+{
+  "name": "@clawland/cheaprouter",
+  "version": "0.1.0",
+  "description": "CheapRouter — ClawBox AI routing wrapper powered by ClawRouter. Fleet-integrated rate limiting, audit, and demo mode.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test src/**/*.test.js"
+  },
+  "keywords": [
+    "ai-router",
+    "openai-compatible",
+    "clawbox",
+    "clawrouter",
+    "cheaprouter",
+    "fleet",
+    "rate-limiting"
+  ],
+  "author": "Clawland Inc",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "express": "^4.21.0",
+    "better-sqlite3": "^11.7.0",
+    "cors": "^2.8.5",
+    "uuid": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

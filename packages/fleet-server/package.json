@@ -1,0 +1,23 @@
+{
+  "name": "@clawland/fleet-server",
+  "version": "0.1.0",
+  "description": "Clawland Fleet Server — device management, heartbeat, OTA, and metrics aggregation for ClawBox devices.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test src/**/*.test.js"
+  },
+  "author": "Clawland Inc",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "express": "^4.21.0",
+    "better-sqlite3": "^11.7.0",
+    "cors": "^2.8.5",
+    "uuid": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
