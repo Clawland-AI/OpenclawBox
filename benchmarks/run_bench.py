@@ -184,7 +184,7 @@ def generate_markdown_report(all_results, output_dir):
     lines = [
         "# ClawBox Benchmark Report",
         "",
-        f"Generated: {datetime.utcnow().isoformat()}Z",
+        f"Generated: {datetime.now().astimezone().isoformat()}",
         "",
         "## Disclaimer",
         "",
