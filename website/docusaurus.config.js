@@ -47,6 +47,7 @@ const config = {
         },
         items: [
           { type: 'docSidebar', sidebarId: 'docs', position: 'left', label: 'Docs' },
+          { to: '/kickstarter', label: 'Kickstarter', position: 'left' },
           {
             href: 'https://github.com/Clawland-AI/OpenclawBox',
             label: 'GitHub',

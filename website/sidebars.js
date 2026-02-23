@@ -9,6 +9,15 @@ const sidebars = {
     'auto-failover',
     'benchmarks',
     'fleet-management',
+    {
+      type: 'category',
+      label: 'Hardware',
+      items: [
+        'hardware/specs',
+        'hardware/assembly-guide',
+        'hardware/touchscreen-ui',
+      ],
+    },
     'security-privacy',
     'faq',
     'roadmap',

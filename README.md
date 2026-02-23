@@ -1,4 +1,8 @@
 <p align="center">
+  <a href="https://openclawbox.ai/kickstarter"><img src="https://img.shields.io/badge/🚀_Coming_to_Kickstarter-June_2026-E53935?style=for-the-badge&labelColor=0d1117" alt="Coming to Kickstarter"></a>
+</p>
+
+<p align="center">
   <img src="assets/logo.png" alt="ClawBox" width="400" />
 </p>
 
@@ -10,6 +14,10 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License"></a>
   <a href="https://github.com/Clawland-AI/OpenclawBox/stargazers"><img src="https://img.shields.io/github/stars/Clawland-AI/OpenclawBox?style=social" alt="Stars"></a>
 </p>
+
+---
+
+> **ClawBox Hardware is coming to Kickstarter in June 2026!** A purpose-built AI appliance with an RK3588 SoC, 7.9" bar touchscreen, and the full OpenclawBox stack pre-installed. [Get notified for early bird pricing →](https://openclawbox.ai/kickstarter)
 
 ---
 
@@ -148,8 +156,10 @@ packages/
   fleet-server/      → Device management server
   fleet-agent/       → Device-side agent
   fleet-console/     → Web dashboard (React + Vite)
+  touchscreen-ui/    → Bar display UI for ClawBox hardware (1280x400)
 benchmarks/          → Reproducible cost/latency benchmarks
 website/             → Documentation site (Docusaurus)
+kickstarter/         → Kickstarter campaign materials & press kit
 scripts/             → install.sh, clawboxctl
 deploy/              → Docker Compose, env templates
 ```
